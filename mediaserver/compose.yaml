@@ -1,0 +1,103 @@
+services:
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: plex
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:32400/web/index.html"]
+      interval: 30s
+      timeout: 10s
+      retries: 3  
+    environment:
+      - PLEX_MEDIA_SERVER_APPLICATION_SUPPORT_DIR=/config/
+      - PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      - LANG=C.UTF-8
+      - LC_ALL=C.UTF-8
+      - VERSION=docker
+      - CHANGE_CONFIG_DIR_OWNERSHIP=true
+      - HOME=/config
+      - _GL_SHADER_DISK_CACHE_PATH=/config
+      - PLEX_CLAIM={{ PLEX_CLAIM }}
+      - PUID={{ PLEX_UID }}
+      - PGID={{ PLEX_GID}}
+{% if nvidia_gpu_passthrough %}
+# passthrough nvidia gpu. delete if not needed. Must install nvidia-container-toolkit on host [ 
+      - NVIDIA_DRIVER_CAPABILITIES=compute,video,utility
+      - NVIDIA_VISIBLE_DEVICES=ALL
+# ]
+{% endif %}
+    volumes: 
+      {{ homelab_media_binds | to_nice_yaml(indent=6) | indent(6) }}
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - plex:/config
+      - type: tmpfs
+        target: /transcode
+        tmpfs:
+          size: "12G"
+    network_mode: host
+{% if tsdproxy_enable %}
+    labels:
+      tsdproxy.enable: "true"
+      tsdproxy.name: "plex"
+      tsdproxy.container_port: "32400"
+{% endif %}
+{% if nvidia_gpu_passthrough %}
+# passthrough nvidia gpu. delete if not needed. Must install nvidia-container-toolkit on host [ 
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu, compute, utility, video]
+# ]
+{% endif %}
+    restart: unless-stopped
+
+  tautulli:
+    image: ghcr.io/tautulli/tautulli:latest
+    container_name: tautulli_tst
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8181/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    ports:
+      - "{{ tautulliport }}:{{ tautulliport }}/tcp"
+{% if tsdproxy_enable %}
+    labels:
+      tsdproxy.enable: "true"
+      tsdproxy.name: "tautulli"
+      tsdproxy.container_port: {{ tautulliport }}
+{% endif %}  
+    environment:
+      - TAUTULLI_DOCKER=True
+      - PUID={{ PLEX_UID }}
+      - PGID={{ PLEX_GID }}
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - tautulli:/config
+    restart: unless-stopped
+
+networks:
+  bridge:
+    external: true
+
+volumes:
+  plex:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data_plex
+  tautulli:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data_tautulli
