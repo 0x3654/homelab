@@ -19,8 +19,8 @@ services:
       - HOME=/config
       - _GL_SHADER_DISK_CACHE_PATH=/config
       - PLEX_CLAIM={{ PLEX_CLAIM }}
-      - PUID={{ PLEX_UID }}
-      - PGID={{ PLEX_GID}}
+      - PUID={{ docker_user_uid | default(0) }}
+      - PGID={{ docker_user_gid | default(0) }}
 {% if nvidia_gpu_passthrough %}
 # passthrough nvidia gpu. delete if not needed. Must install nvidia-container-toolkit on host [ 
       - NVIDIA_DRIVER_CAPABILITIES=compute,video,utility
@@ -58,7 +58,7 @@ services:
 
   tautulli:
     image: ghcr.io/tautulli/tautulli:latest
-    container_name: tautulli_tst
+    container_name: tautulli
     security_opt:
       - no-new-privileges:true
     healthcheck:

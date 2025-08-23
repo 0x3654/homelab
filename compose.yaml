@@ -1,0 +1,2 @@
+include:
+  - path: './mediaserver/compose.yaml'
