@@ -1,0 +1,74 @@
+services:    
+  transmission:
+    image: linuxserver/transmission:latest
+    container_name: transmission
+    security_opt:
+      - no-new-privileges:true
+    ports:  
+      - "{{ transmission_port }}:{{ transmission_port }}"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsSL http://localhost:9091/|| exit 1"]
+      interval: 60s
+      timeout: 60s
+      retries: 3
+    environment:
+      - PUID={{ folder_user_uid | default(0) }}
+      - PGID={{ folder_user_gid | default(0) }}
+    #labels:
+        #autoheal: "true"
+{% if tsdproxy_enable %}
+        tsdproxy.enable: "true"
+        tsdproxy.name: "transmission"
+        tsdproxy.container_port: {{ transmission_port }}
+{% endif %}
+    volumes:
+      {{ homelab_media_binds | to_nice_yaml(indent=6) | indent(6) }}
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - ./data_transmission:/config
+      - ./settings.json:/config/settings.json
+    tmpfs:
+      - /transcode:size=64G
+    restart: unless-stopped
+  
+  transmission-rss:
+    image: nning2/transmission-rss:latest
+    #image: haugene/transmission-rss
+    container_name: transmission-rss
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - ./data_transmission-rss:/etc/transmission-rss:ro
+    ports:
+      - "444:443"
+    restart: unless-stopped
+    depends_on:
+      - transmission
+  
+  torrserver:
+    image: ghcr.io/yourok/torrserver:latest
+    container_name: torrserver
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - ./data_torrserver:/opt/ts
+    ports:
+      - "{{ torrserverport }}:{{ torrserverport }}"
+    labels:
+{% if tsdproxy_enable %}
+      tsdproxy.enable: "true"
+      tsdproxy.name: "torrserver"
+      tsdproxy.container_port: "{{ torrserverport }}"
+{% endif %}
+      autoheal: "true"
+      com.centurylinklabs.watchtower.enable: "true"  
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:{{ torrserverport }} || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
