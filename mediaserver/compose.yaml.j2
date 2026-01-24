@@ -8,7 +8,7 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:32400/web/index.html"]
       interval: 30s
       timeout: 10s
-      retries: 3
+      retries: 3  
     environment:
       - PLEX_MEDIA_SERVER_APPLICATION_SUPPORT_DIR=/config/
       - PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
@@ -18,7 +18,7 @@ services:
       - CHANGE_CONFIG_DIR_OWNERSHIP=true
       - HOME=/config
       - _GL_SHADER_DISK_CACHE_PATH=/config
-      - PLEX_CLAIM={{ homelab_plex_claim }}
+      - PLEX_CLAIM={{ PLEX_CLAIM }}
       - PUID={{ common_folder_user_uid | default(0) }}
       - PGID={{ common_folder_user_gid | default(0) }}
 {% if nvidia_gpu_passthrough %}
@@ -26,7 +26,7 @@ services:
       - NVIDIA_DRIVER_CAPABILITIES=compute,video,utility
       - NVIDIA_VISIBLE_DEVICES=ALL
 {% endif %}
-    volumes:
+    volumes: 
       {{ homelab_media_binds | to_nice_yaml(indent=6) | indent(6) }}
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
@@ -63,13 +63,13 @@ services:
       timeout: 10s
       retries: 3
     ports:
-      - "{{ homelab_tautulliport }}:{{ tautulliport }}/tcp"
+      - "{{ tautulliport }}:{{ tautulliport }}/tcp"
 {% if tsdproxy_enable %}
     labels:
       tsdproxy.enable: "true"
       tsdproxy.name: "tautulli"
-      tsdproxy.container_port: {{ homelab_tautulliport }}
-{% endif %}
+      tsdproxy.container_port: {{ tautulliport }}
+{% endif %}  
     environment:
       - TAUTULLI_DOCKER=True
       - PUID={{ common_folder_user_uid | default(0) }}

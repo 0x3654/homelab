@@ -1,0 +1,35 @@
+services:
+  semaphore:
+    container_name: "semaphore"
+    restart: unless-stopped
+    ports:
+      - 3000:3000
+    image: semaphoreui/semaphore
+    environment:
+      SEMAPHORE_DB_DIALECT: bolt
+      SEMAPHORE_ADMIN: admin
+      SEMAPHORE_ADMIN_PASSWORD: changeme
+      SEMAPHORE_ADMIN_NAME: Admin
+      SEMAPHORE_ADMIN_EMAIL: admin@0x3654.com
+    #  SEMAPHORE_WEB_ROOT: "https://0x3654.com/semaphore"
+    volumes:
+      - semaphore_data:/var/lib/semaphore
+      - semaphore_config:/etc/semaphore
+    labels:
+      tsdproxy.enable: "true"
+      tsdproxy.name: "semaphore"
+      tsdproxy.container_port: 3000
+
+volumes:
+  semaphore_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./semaphore_data
+  semaphore_config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./semaphore_config

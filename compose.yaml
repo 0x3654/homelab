@@ -1,3 +1,4 @@
 include:
   - path: './mediaserver/compose.yaml'
   - path: './torrent/compose.yaml'
+  - path: './smarthome/compose.yaml'
