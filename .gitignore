@@ -28,3 +28,7 @@ vault_password_file
 # исключаем host_vars кроме example
 /host_vars/*
 !/host_vars/example.yml
+
+# Semaphore data
+CICD/semaphore_data/
+CICD/semaphore_config/config.json
