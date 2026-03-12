@@ -22,10 +22,9 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
       - ./data_transmission:/config
-      - ./settings.json:/config/settings.json
       {{ homelab_media_binds | to_nice_yaml(indent=6) | indent(6) }}
     tmpfs:
-      - /transcode:size=64G
+      - /transcode:size=4G
     restart: unless-stopped
 
   transmission-rss:
@@ -39,7 +38,8 @@ services:
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-      - ./data_transmission-rss:/etc/transmission-rss:ro
+      - ./data_transmission-rss:/etc/transmission-rss
+      - ./transmission-rss.conf:/etc/transmission-rss.conf
     ports:
       - "444:443"
     restart: unless-stopped

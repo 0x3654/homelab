@@ -1,0 +1,14 @@
+feeds:
+  - url: "{{ homelab_trans_rss_url }}"
+    download_path: "{{ homelab_trans_rss_download_path }}"
+
+server:
+  host: "transmission"
+  port: {{ homelab_transmission_port }}
+  tls: false
+  rpc_path: "/transmission/rpc"
+  seen_by_guid: true
+login:
+  username: {{ homelab_trans_username }}
+  password: {{ homelab_trans_password }}
+update_interval: {{ homelab_trans_rss_update_interval }}

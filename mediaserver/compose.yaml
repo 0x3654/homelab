@@ -63,7 +63,7 @@ services:
       timeout: 10s
       retries: 3
     ports:
-      - "{{ homelab_tautulliport }}:{{ tautulliport }}/tcp"
+      - "{{ homelab_tautulliport }}:{{ homelab_tautulliport }}/tcp"
 {% if tsdproxy_enable %}
     labels:
       tsdproxy.enable: "true"
