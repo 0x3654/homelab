@@ -23,8 +23,6 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ./data_transmission:/config
       {{ homelab_media_binds | to_nice_yaml(indent=6) | indent(6) }}
-    tmpfs:
-      - /transcode:size=4G
     restart: unless-stopped
 
   transmission-rss:
