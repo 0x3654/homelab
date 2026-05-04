@@ -97,8 +97,8 @@ wait_for_verification() {
     local info
     info=$(call_rpc "torrent-get" "$args")
     local recheck left status percent error
-    recheck=$(jq -r '.arguments.torrents[0].recheckState' <<<"$info")
-    left=$(jq -r '.arguments.torrents[0].leftUntilDone' <<<"$info")
+    recheck=$(jq -r '(.arguments.torrents[0].recheckState // 0)' <<<"$info")
+    left=$(jq -r '(.arguments.torrents[0].leftUntilDone // 0)' <<<"$info")
     status=$(jq -r '.arguments.torrents[0].status' <<<"$info")
     percent=$(jq -r '.arguments.torrents[0].percentDone' <<<"$info")
     error=$(jq -r '.arguments.torrents[0].errorString // ""' <<<"$info")
