@@ -97,8 +97,8 @@ wait_for_verification() {
     local info
     info=$(call_rpc "torrent-get" "$args")
     local recheck left status percent error
-    recheck=$(jq -r '.arguments.torrents[0].recheckState' <<<"$info")
-    left=$(jq -r '.arguments.torrents[0].leftUntilDone' <<<"$info")
+    recheck=$(jq -r '(.arguments.torrents[0].recheckState // 0)' <<<"$info")
+    left=$(jq -r '(.arguments.torrents[0].leftUntilDone // 0)' <<<"$info")
     status=$(jq -r '.arguments.torrents[0].status' <<<"$info")
     percent=$(jq -r '.arguments.torrents[0].percentDone' <<<"$info")
     error=$(jq -r '.arguments.torrents[0].errorString // ""' <<<"$info")
@@ -109,6 +109,10 @@ wait_for_verification() {
     if [[ "$recheck" -eq 0 && "$left" -eq 0 ]]; then
       log "Verification complete and torrent fully downloaded"
       break
+    fi
+    if [[ "$status" -eq 0 && "$left" -gt 0 ]]; then
+      log "Torrent is stopped with data missing; starting repair download"
+      start_torrent "to repair missing data"
     fi
     now=$(date +%s)
     elapsed=$((now - start))
@@ -258,9 +262,18 @@ maybe_move_to_tv_show() {
   TR_TORRENT_DIR="$new_dir"
 }
 
+start_torrent() {
+  local reason="${1:-for seeding}"
+  local args
+  args=$(jq -cn --argjson ids "$TORRENT_IDS_JSON" '{ids:$ids}')
+  log "Starting torrent ${reason}"
+  call_rpc "torrent-start" "$args" >/dev/null
+}
+
 start_verify
 wait_for_verification
 maybe_move_to_tv_show
 rename_all_files
+start_torrent
 
 log "Post-processing completed for torrent '${TR_TORRENT_NAME}'"
