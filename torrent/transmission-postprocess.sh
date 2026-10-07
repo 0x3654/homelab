@@ -143,13 +143,19 @@ rename_path_component() {
     return 1
   fi
 
-  local args
+  local args result
   args=$(jq -cn \
     --argjson ids "$TORRENT_IDS_JSON" \
-    --arg path "$abs_path" \
+    --arg path "$rel" \
     --arg name "$new_name" \
     '{ids:$ids,path:$path,name:$name}')
-  call_rpc "torrent-rename-path" "$args" >/dev/null
+  # transmission 4.x takes the path relative to the download dir (files[].name);
+  # an absolute path fails with "Invalid argument" (HTTP 200, so check .result)
+  result=$(call_rpc "torrent-rename-path" "$args" | jq -r '.result // "no result"')
+  if [[ "$result" != "success" ]]; then
+    log "Rename failed for '${rel}' (RPC result: ${result})"
+    return 1
+  fi
   log "Renamed '${rel}' -> '${new_name}'"
 }
 
